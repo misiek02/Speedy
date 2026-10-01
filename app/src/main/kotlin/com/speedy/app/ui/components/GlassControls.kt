@@ -33,11 +33,12 @@ import com.speedy.app.core.glass.glassPressEffect
 import com.speedy.app.core.glass.liquidGlass
 import com.speedy.app.core.location.SpeedData
 import com.speedy.app.core.location.SpeedUnit
+import com.speedy.app.core.settings.AppAccentColor
 import com.speedy.app.core.settings.AppLanguage
+import com.speedy.app.core.settings.AppSettings
 import com.speedy.app.core.settings.AppStrings
 import com.speedy.app.core.settings.AppThemeStyle
-import com.speedy.app.ui.theme.CyanAccent
-import com.speedy.app.ui.theme.MintAccent
+import com.speedy.app.ui.theme.DarkCardMinimal
 import com.speedy.app.ui.theme.RedAlert
 
 /**
@@ -50,15 +51,16 @@ fun GlassMetricCard(
     value: String,
     unit: String = "",
     modifier: Modifier = Modifier,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val cardShape = RoundedCornerShape(18.dp)
 
     val surfaceModifier = if (isMaterial3) {
         modifier
             .clip(cardShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f))
-            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outlineVariant, cardShape)
+            .background(DarkCardMinimal)
+            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outline, cardShape)
     } else {
         modifier
             .clip(cardShape)
@@ -88,7 +90,7 @@ fun GlassMetricCard(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = unit,
-                        color = CyanAccent,
+                        color = accentColor.primary,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(bottom = 2.dp)
@@ -107,7 +109,8 @@ fun MetricsGrid(
     speedData: SpeedData,
     language: AppLanguage,
     modifier: Modifier = Modifier,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -122,13 +125,15 @@ fun MetricsGrid(
                 value = speedData.displayMaxSpeed,
                 unit = speedData.displayUnit,
                 modifier = Modifier.weight(1f),
-                isMaterial3 = isMaterial3
+                isMaterial3 = isMaterial3,
+                accentColor = accentColor
             )
             GlassMetricCard(
                 label = AppStrings.distance(language),
                 value = speedData.displayDistance,
                 modifier = Modifier.weight(1f),
-                isMaterial3 = isMaterial3
+                isMaterial3 = isMaterial3,
+                accentColor = accentColor
             )
         }
         Row(
@@ -140,14 +145,16 @@ fun MetricsGrid(
                 value = if (speedData.accuracyMeters > 0) String.format(java.util.Locale.US, "±%.1f", speedData.accuracyMeters) else "--",
                 unit = "m",
                 modifier = Modifier.weight(1f),
-                isMaterial3 = isMaterial3
+                isMaterial3 = isMaterial3,
+                accentColor = accentColor
             )
             GlassMetricCard(
                 label = AppStrings.satellites(language),
                 value = if (speedData.isSimulating) "14" else "${speedData.satellitesCount}",
                 unit = "fix",
                 modifier = Modifier.weight(1f),
-                isMaterial3 = isMaterial3
+                isMaterial3 = isMaterial3,
+                accentColor = accentColor
             )
         }
     }
@@ -162,7 +169,8 @@ fun UnitSelector(
     selectedUnit: SpeedUnit,
     onUnitSelected: (SpeedUnit) -> Unit,
     modifier: Modifier = Modifier,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
 
@@ -170,8 +178,8 @@ fun UnitSelector(
         modifier
             .fillMaxWidth()
             .clip(pillShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f))
-            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outlineVariant, pillShape)
+            .background(DarkCardMinimal)
+            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outline, pillShape)
             .padding(4.dp)
     } else {
         modifier
@@ -190,20 +198,28 @@ fun UnitSelector(
             SpeedUnit.entries.forEach { unit ->
                 val isSelected = unit == selectedUnit
                 val indicatorColor by animateColorAsState(
-                    targetValue = if (isSelected) CyanAccent.copy(alpha = if (isMaterial3) 0.35f else 0.18f) else Color.Transparent,
+                    targetValue = if (isSelected) {
+                        accentColor.primary.copy(alpha = if (isMaterial3) 0.35f else 0.22f)
+                    } else {
+                        Color.Transparent
+                    },
                     label = "unitIndicatorColor"
                 )
                 val textColor by animateColorAsState(
-                    targetValue = if (isSelected) Color.White else Color.White.copy(alpha = 0.65f),
+                    targetValue = if (isSelected) Color.White else Color.White.copy(alpha = 0.60f),
                     label = "unitTextColor"
                 )
                 val itemShape = RoundedCornerShape(percent = 50)
 
                 Box(
                     modifier = Modifier
-                        .weight(1f) // EQUAL WIDTH FOR ALL 3!
+                        .weight(1f)
                         .clip(itemShape)
                         .background(indicatorColor)
+                        .then(
+                            if (isSelected) Modifier.border(GlassTokens.EDGE_WIDTH, accentColor.primary.copy(alpha = 0.5f), itemShape)
+                            else Modifier
+                        )
                         .glassPressEffect(targetScale = 0.94f)
                         .clickable { onUnitSelected(unit) }
                         .padding(vertical = 10.dp),
@@ -231,11 +247,12 @@ fun FloatingBubbleToggleButton(
     language: AppLanguage,
     onToggle: () -> Unit,
     modifier: Modifier = Modifier,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val shape = RoundedCornerShape(22.dp)
     val indicatorColor by animateColorAsState(
-        targetValue = if (isOverlayActive) MintAccent else Color.White.copy(alpha = 0.3f),
+        targetValue = if (isOverlayActive) accentColor.primary else Color.White.copy(alpha = 0.3f),
         label = "overlayToggleIndicator"
     )
 
@@ -243,8 +260,8 @@ fun FloatingBubbleToggleButton(
         modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f))
-            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outlineVariant, shape)
+            .background(DarkCardMinimal)
+            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outline, shape)
             .glassPressEffect(targetScale = 0.975f)
             .clickable { onToggle() }
             .padding(horizontal = 20.dp, vertical = 16.dp)
@@ -295,12 +312,13 @@ fun FloatingBubbleToggleButton(
             Box(
                 modifier = Modifier
                     .clip(badgeShape)
-                    .background(if (isOverlayActive) RedAlert.copy(alpha = 0.18f) else CyanAccent.copy(alpha = 0.18f))
+                    .background(if (isOverlayActive) RedAlert.copy(alpha = 0.18f) else accentColor.primary.copy(alpha = 0.18f))
+                    .border(GlassTokens.EDGE_WIDTH, if (isOverlayActive) RedAlert else accentColor.primary.copy(alpha = 0.4f), badgeShape)
                     .padding(horizontal = 14.dp, vertical = 8.dp)
             ) {
                 Text(
                     text = if (isOverlayActive) AppStrings.disableAction(language) else AppStrings.enableAction(language),
-                    color = if (isOverlayActive) RedAlert else CyanAccent,
+                    color = if (isOverlayActive) RedAlert else accentColor.primary,
                     fontSize = 12.sp,
                     fontWeight = FontWeight.ExtraBold,
                     letterSpacing = 0.5.sp
@@ -311,7 +329,7 @@ fun FloatingBubbleToggleButton(
 }
 
 /**
- * Theme Style Selector pill (LIQUID GLASS vs MATERIAL 3).
+ * Theme Style Selector pill (AURA vs MINIMAL).
  */
 @Composable
 fun ThemeStyleSelector(
@@ -319,15 +337,16 @@ fun ThemeStyleSelector(
     onStyleSelected: (AppThemeStyle) -> Unit,
     modifier: Modifier = Modifier,
     language: AppLanguage = AppLanguage.PL,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
 
     val containerModifier = if (isMaterial3) {
         modifier
             .clip(pillShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f))
-            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outlineVariant, pillShape)
+            .background(DarkCardMinimal)
+            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outline, pillShape)
             .padding(3.dp)
     } else {
         modifier
@@ -345,7 +364,7 @@ fun ThemeStyleSelector(
             AppThemeStyle.entries.forEach { style ->
                 val isSelected = style == selectedStyle
                 val indicatorColor by animateColorAsState(
-                    targetValue = if (isSelected) CyanAccent.copy(alpha = if (isMaterial3) 0.35f else 0.22f) else Color.Transparent,
+                    targetValue = if (isSelected) accentColor.primary.copy(alpha = if (isMaterial3) 0.35f else 0.22f) else Color.Transparent,
                     label = "themeStyleIndicator"
                 )
                 val textColor by animateColorAsState(
@@ -359,6 +378,10 @@ fun ThemeStyleSelector(
                         .weight(1f)
                         .clip(itemShape)
                         .background(indicatorColor)
+                        .then(
+                            if (isSelected) Modifier.border(GlassTokens.EDGE_WIDTH, accentColor.primary.copy(alpha = 0.5f), itemShape)
+                            else Modifier
+                        )
                         .glassPressEffect(targetScale = 0.94f)
                         .clickable { onStyleSelected(style) }
                         .padding(vertical = 8.dp),
@@ -385,15 +408,16 @@ fun LanguageSelector(
     selectedLanguage: AppLanguage,
     onLanguageSelected: (AppLanguage) -> Unit,
     modifier: Modifier = Modifier,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val pillShape = RoundedCornerShape(percent = 50)
 
     val containerModifier = if (isMaterial3) {
         modifier
             .clip(pillShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f))
-            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outlineVariant, pillShape)
+            .background(DarkCardMinimal)
+            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outline, pillShape)
             .padding(3.dp)
     } else {
         modifier
@@ -411,7 +435,7 @@ fun LanguageSelector(
             AppLanguage.entries.forEach { lang ->
                 val isSelected = lang == selectedLanguage
                 val indicatorColor by animateColorAsState(
-                    targetValue = if (isSelected) CyanAccent.copy(alpha = if (isMaterial3) 0.35f else 0.22f) else Color.Transparent,
+                    targetValue = if (isSelected) accentColor.primary.copy(alpha = if (isMaterial3) 0.35f else 0.22f) else Color.Transparent,
                     label = "languageIndicator"
                 )
                 val textColor by animateColorAsState(
@@ -425,6 +449,10 @@ fun LanguageSelector(
                         .weight(1f)
                         .clip(itemShape)
                         .background(indicatorColor)
+                        .then(
+                            if (isSelected) Modifier.border(GlassTokens.EDGE_WIDTH, accentColor.primary.copy(alpha = 0.5f), itemShape)
+                            else Modifier
+                        )
                         .glassPressEffect(targetScale = 0.94f)
                         .clickable { onLanguageSelected(lang) }
                         .padding(vertical = 8.dp),

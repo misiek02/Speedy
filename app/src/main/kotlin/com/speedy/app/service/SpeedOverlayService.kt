@@ -172,9 +172,11 @@ class SpeedOverlayService : LifecycleService(), SavedStateRegistryOwner, ViewMod
             setContent {
                 val speedData by SpeedTracker.speedData.collectAsState()
                 val themeStyle by AppSettings.themeStyle.collectAsState()
+                val accentColor by AppSettings.accentColor.collectAsState()
                 SpeedBubble(
                     speedData = speedData,
-                    isMaterial3 = (themeStyle == AppThemeStyle.MATERIAL3)
+                    isMaterial3 = (themeStyle == AppThemeStyle.MATERIAL3),
+                    accentColor = accentColor
                 )
             }
         }

@@ -35,10 +35,12 @@ import androidx.compose.ui.unit.sp
 import com.speedy.app.core.glass.GlassTokens
 import com.speedy.app.core.glass.liquidGlass
 import com.speedy.app.core.location.SpeedData
+import com.speedy.app.core.settings.AppAccentColor
 import com.speedy.app.core.settings.AppLanguage
+import com.speedy.app.core.settings.AppSettings
 import com.speedy.app.core.settings.AppStrings
-import com.speedy.app.ui.theme.CyanAccent
-import com.speedy.app.ui.theme.MintAccent
+import com.speedy.app.ui.theme.DarkCardBorder
+import com.speedy.app.ui.theme.DarkCardMinimal
 import com.speedy.app.ui.theme.RedAlert
 import kotlin.math.cos
 import kotlin.math.sin
@@ -53,7 +55,8 @@ fun SpeedGauge(
     language: AppLanguage,
     modifier: Modifier = Modifier,
     sizeDp: Dp = 280.dp,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val speedValue = speedData.unit.convert(speedData.currentSpeedMps).coerceAtLeast(0f)
     val maxGaugeSpeed = 180f
@@ -69,8 +72,8 @@ fun SpeedGauge(
         modifier
             .size(sizeDp)
             .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.95f))
-            .border(GlassTokens.EDGE_WIDTH, MaterialTheme.colorScheme.outlineVariant, CircleShape)
+            .background(DarkCardMinimal)
+            .border(GlassTokens.EDGE_WIDTH, DarkCardBorder, CircleShape)
     } else {
         modifier
             .size(sizeDp)
@@ -128,14 +131,14 @@ fun SpeedGauge(
                 val dynamicColor = when {
                     speedValue > 130f -> RedAlert
                     speedValue > 80f -> Color(0xFFFFB300)
-                    else -> CyanAccent
+                    else -> accentColor.primary
                 }
 
                 drawArc(
                     brush = Brush.sweepGradient(
                         colors = listOf(
-                            CyanAccent,
-                            MintAccent,
+                            accentColor.secondary,
+                            accentColor.primary,
                             dynamicColor
                         )
                     ),
@@ -220,7 +223,7 @@ fun SpeedGauge(
 
             Text(
                 text = speedData.displayUnit.uppercase(),
-                color = CyanAccent,
+                color = accentColor.primary,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.ExtraBold,
                 letterSpacing = 2.sp
@@ -236,8 +239,8 @@ fun SpeedGauge(
                 else -> AppStrings.gaugeStatusDisabled(language)
             }
             val statusColor = when {
-                speedData.isSimulating -> CyanAccent
-                speedData.isGpsFixed -> MintAccent
+                speedData.isSimulating -> accentColor.secondary
+                speedData.isGpsFixed -> accentColor.primary
                 speedData.isTracking -> Color(0xFFFFB300)
                 else -> Color.White.copy(alpha = 0.5f)
             }

@@ -70,13 +70,15 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            SpeedyTheme {
+            val accentColor by AppSettings.accentColor.collectAsState()
+            SpeedyTheme(accentColor = accentColor) {
                 val hazeState = rememberHazeState()
 
                 val speedData by SpeedTracker.speedData.collectAsState()
                 val isOverlayActive by SpeedOverlayService.isRunning.collectAsState()
                 val language by AppSettings.language.collectAsState()
                 val themeStyle by AppSettings.themeStyle.collectAsState()
+                val currentTab by AppSettings.currentTab.collectAsState()
 
                 CompositionLocalProvider(
                     LocalLiquidGlassEnabled provides (themeStyle == AppThemeStyle.LIQUID_GLASS),
@@ -91,8 +93,12 @@ class MainActivity : ComponentActivity() {
                             isOverlayActive = isOverlayActive,
                             language = language,
                             themeStyle = themeStyle,
+                            currentTab = currentTab,
+                            accentColor = accentColor,
+                            onTabSelected = { AppSettings.setTab(it) },
                             onLanguageSelected = { AppSettings.setLanguage(it) },
                             onThemeStyleSelected = { AppSettings.setThemeStyle(it) },
+                            onAccentColorSelected = { AppSettings.setAccentColor(it) },
                             hasLocationPermission = hasLocationPermission,
                             hasOverlayPermission = hasOverlayPermission,
                             onRequestLocationPermission = { requestLocationPermissions() },

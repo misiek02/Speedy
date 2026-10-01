@@ -21,6 +21,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontFamily
@@ -31,7 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.speedy.app.core.glass.GlassTokens
 import com.speedy.app.core.location.SpeedData
-import com.speedy.app.ui.theme.CyanAccent
+import com.speedy.app.core.settings.AppAccentColor
+import com.speedy.app.core.settings.AppSettings
+import com.speedy.app.ui.theme.DarkCardBorder
+import com.speedy.app.ui.theme.DarkCardMinimal
 
 /**
  * Floating speed bubble popup.
@@ -49,7 +53,8 @@ fun SpeedBubble(
     speedData: SpeedData,
     modifier: Modifier = Modifier,
     sizeDp: Dp = 84.dp,
-    isMaterial3: Boolean = false
+    isMaterial3: Boolean = false,
+    accentColor: AppAccentColor = AppSettings.accentColor.value
 ) {
     val speedValue = speedData.unit.convert(speedData.currentSpeedMps).coerceAtLeast(0f)
     val maxGaugeSpeed = 160f
@@ -63,12 +68,7 @@ fun SpeedBubble(
 
     // Subtle 0.5dp hairline border matching the app cards
     val borderBrush = if (isMaterial3) {
-        Brush.linearGradient(
-            colors = listOf(
-                Color(0xFF434C5E),
-                Color(0xFF2E3440)
-            )
-        )
+        SolidColor(DarkCardBorder)
     } else {
         Brush.linearGradient(
             colors = listOf(
@@ -98,7 +98,7 @@ fun SpeedBubble(
             // 1. Solid opaque substrate (matching app cards - 100% opaque, not transparent!)
             if (isMaterial3) {
                 drawCircle(
-                    color = Color(0xFF1E2430),
+                    color = DarkCardMinimal,
                     radius = radius,
                     center = center
                 )
@@ -106,9 +106,9 @@ fun SpeedBubble(
                 drawCircle(
                     brush = Brush.linearGradient(
                         colors = listOf(
-                            Color(0xFF182236),
-                            Color(0xFF111726),
-                            Color(0xFF0D121F)
+                            Color(0xFF0F1523),
+                            Color(0xFF0A0E18),
+                            Color(0xFF060910)
                         ),
                         start = Offset(0f, 0f),
                         end = Offset(canvasWidth, canvasHeight)
@@ -153,15 +153,15 @@ fun SpeedBubble(
                 val speedColor = when {
                     speedValue > 120f -> Color(0xFFFF3366)
                     speedValue > 70f -> Color(0xFFFFB300)
-                    else -> Color(0xFF00E5FF)
+                    else -> accentColor.primary
                 }
 
                 drawArc(
                     brush = Brush.sweepGradient(
                         colors = listOf(
-                            Color(0xFF00E5FF),
-                            speedColor,
-                            Color(0xFF76FF03)
+                            accentColor.secondary,
+                            accentColor.primary,
+                            speedColor
                         )
                     ),
                     startAngle = 135f,
@@ -176,8 +176,8 @@ fun SpeedBubble(
             // 4. GPS telemetry LED indicator
             val dotRadius = 2.5.dp.toPx()
             val dotColor = when {
-                speedData.isSimulating -> Color(0xFF00E5FF)
-                speedData.isGpsFixed -> Color(0xFF00E676)
+                speedData.isSimulating -> accentColor.secondary
+                speedData.isGpsFixed -> accentColor.primary
                 else -> Color(0xFFFF9100)
             }
             // Soft glow halo around LED
@@ -214,7 +214,7 @@ fun SpeedBubble(
 
             Text(
                 text = speedData.displayUnit.uppercase(),
-                color = CyanAccent,
+                color = accentColor.primary,
                 fontSize = 9.sp,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp,
